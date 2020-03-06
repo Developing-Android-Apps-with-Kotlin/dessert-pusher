@@ -14,11 +14,14 @@ import se.stylianosgakis.dessertpusher.R
 import se.stylianosgakis.dessertpusher.databinding.ActivityMainBinding
 import se.stylianosgakis.dessertpusher.model.Dessert
 
+const val REVENUE_KEY = "revenue_key"
+const val DESSERTS_SOLD_KEY = "desserts_sold_key"
+
 class MainActivity : AppCompatActivity(), LifecycleObserver {
     private var revenue = 0
     private var dessertsSold = 0
     private lateinit var binding: ActivityMainBinding
-    private lateinit var timer: DessertTimer
+    private lateinit var dessertTimer: DessertTimer
     private val dessertList = listOf(
         Dessert(R.drawable.cupcake, 5, 0),
         Dessert(R.drawable.donut, 10, 5),
@@ -38,7 +41,6 @@ class MainActivity : AppCompatActivity(), LifecycleObserver {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        timer = DessertTimer()
         binding = DataBindingUtil.setContentView(
             this,
             R.layout.activity_main
@@ -46,19 +48,15 @@ class MainActivity : AppCompatActivity(), LifecycleObserver {
         binding.dessertButton.setOnClickListener {
             dessertClicked()
         }
+        dessertTimer = DessertTimer(lifecycle)
+        if (savedInstanceState != null) {
+            revenue = savedInstanceState.getInt(REVENUE_KEY)
+            dessertsSold = savedInstanceState.getInt(DESSERTS_SOLD_KEY)
+            showCurrentDessert()
+        }
         binding.revenue = revenue
         binding.amountSold = dessertsSold
         binding.dessertButton.setImageResource(currentDessert.imageId)
-    }
-
-    override fun onStart() {
-        super.onStart()
-        timer.startTimer()
-    }
-
-    override fun onStop() {
-        super.onStop()
-        timer.stopTimer()
     }
 
     private fun dessertClicked() {
@@ -78,6 +76,12 @@ class MainActivity : AppCompatActivity(), LifecycleObserver {
             currentDessert = newDessert
             binding.dessertButton.setImageResource(newDessert.imageId)
         }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putInt(REVENUE_KEY, revenue)
+        outState.putInt(DESSERTS_SOLD_KEY, dessertsSold)
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
