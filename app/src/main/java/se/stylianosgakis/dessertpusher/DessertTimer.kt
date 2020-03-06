@@ -1,34 +1,41 @@
 package se.stylianosgakis.dessertpusher
 
-import android.os.Handler
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.OnLifecycleEvent
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import timber.log.Timber
+import kotlin.time.ExperimentalTime
+import kotlin.time.seconds
 
 class DessertTimer(
     lifecycle: Lifecycle
 ) : LifecycleObserver {
     private var secondsCount = 0
-    private var handler = Handler()
-    private lateinit var runnable: Runnable
+    private lateinit var job: Job
+    private val coroutineScope = CoroutineScope(Dispatchers.Default)
 
     init {
         lifecycle.addObserver(this)
     }
 
+    @ExperimentalTime
     @OnLifecycleEvent(Lifecycle.Event.ON_START)
     fun startTimer() {
-        runnable = Runnable {
-            secondsCount++
-            Timber.i("Timer is at : $secondsCount")
-            handler.postDelayed(runnable, 1000)
+        job = coroutineScope.launch {
+            while (true) {
+                delay(1.seconds.toLongMilliseconds())
+                Timber.i("Timer is at : ${secondsCount++}")
+            }
         }
-        handler.postDelayed(runnable, 1000)
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
     fun stopTimer() {
-        handler.removeCallbacks(runnable)
+        job.cancel()
     }
 }
